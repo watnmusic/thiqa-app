@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ثقة - نظام اللوجستيات</title>
+  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#dc2626" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
-  <header class="bg-gray-900 border-b border-red-600/40 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+  <header class="bg-gray-900 border-b border-red-600/40 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full bg-red-600 inline-block"></span>
       <h1 class="text-lg font-bold text-white">ثقة <span class="text-xs font-normal text-red-400">للوجستيات</span></h1>
@@ -26,9 +27,124 @@
       <form id="orderForm" class="space-y-3">
         <input id="customerName" type="text" required placeholder="اسم العميل أو الجهة"
           class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
-        <input id="phoneNumber" type="tel" required placeholder="رقم الهاتف للتواصل"
-          class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
-        <input id="itemDesc" type="text" required placeholder="وصف الطلب أو الشحنة"
+        <input id="itemDesc" type="text" required placeholder="وصف الطلب (مثال: قطع غيار، معدات...)"
           class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
         <div class="grid grid-cols-2 gap-3">
-          <input id="pickup" type="text" required placeholder="نقطة
+          <input id="pickup" type="text" required placeholder="نقطة الاستلام"
+            class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
+          <input id="dropoff" type="text" required placeholder="وجهة التسليم"
+            class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
+        </div>
+        <button type="submit"
+          class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 rounded-xl transition">
+          إرسال الطلب
+        </button>
+      </form>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="font-bold text-base text-gray-200">الطلبات الحالية</h2>
+      <div id="ordersList" class="space-y-2.5">
+        <p class="text-sm text-gray-500">جاري تحميل الطلبات...</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBN4lQipdMRtcmqQzhUmyQCKKPoOGyPCyE",
+      authDomain: "thiqa-app-3dbca.firebaseapp.com",
+      databaseURL: "https://thiqa-app-3dbca-default-rtdb.firebaseio.com",
+      projectId: "thiqa-app-3dbca",
+      storageBucket: "thiqa-app-3dbca.firebasestorage.app",
+      messagingSenderId: "453691349979",
+      appId: "1:453691349979:web:b956f2a12c65bc4207a5fe",
+      measurementId: "G-N76DTL00X2"
+    };
+
+    const ADMIN_PIN = "1999";
+    const ORDERS_PATH = "orders";
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const ordersRef = db.ref(ORDERS_PATH);
+
+    const adminBtn = document.getElementById("adminBtn");
+    const orderForm = document.getElementById("orderForm");
+    const ordersList = document.getElementById("ordersList");
+
+    let isAdmin = false;
+    let latestOrders = [];
+
+    function setAdminState(active) {
+      isAdmin = active;
+      adminBtn.textContent = isAdmin ? "خروج الإدارة (نشط)" : "دخول الإدارة";
+      renderOrders(latestOrders);
+    }
+
+    function renderOrders(orders) {
+      latestOrders = orders;
+      if (!orders.length) {
+        ordersList.innerHTML = '<p class="text-sm text-gray-500">لا توجد طلبات حالياً.</p>';
+        return;
+      }
+
+      ordersList.innerHTML = orders.map((order) => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 flex items-start justify-between gap-3">
+          <div class="space-y-1 text-sm">
+            <div class="font-bold text-white">${order.customerName} <span class="text-xs text-red-400 font-normal">(${order.status})</span></div>
+            <div class="text-gray-300">${order.itemDesc}</div>
+            <div class="text-xs text-gray-400">من: ${order.pickup} ← إلى: ${order.dropoff}</div>
+          </div>
+          ${isAdmin ? `<button type="button" onclick="deleteOrder('${order.id}')" class="text-xs bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 px-2.5 py-1 rounded-lg">حذف</button>` : ""}
+        </div>
+      `).join("");
+    }
+
+    adminBtn.addEventListener("click", () => {
+      if (isAdmin) {
+        setAdminState(false);
+        return;
+      }
+      const pin = prompt("أدخل رمز الإدارة:");
+      if (pin === ADMIN_PIN) {
+        setAdminState(true);
+      } else if (pin !== null) {
+        alert("الرمز غير صحيح");
+      }
+    });
+
+    orderForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await ordersRef.push({
+        customerName: document.getElementById("customerName").value.trim(),
+        itemDesc: document.getElementById("itemDesc").value.trim(),
+        pickup: document.getElementById("pickup").value.trim(),
+        dropoff: document.getElementById("dropoff").value.trim(),
+        status: "قيد الانتظار",
+        createdAt: Date.now()
+      });
+      orderForm.reset();
+    });
+
+    window.deleteOrder = async (id) => {
+      if (!isAdmin) return;
+      await ordersRef.child(id).remove();
+    };
+
+    ordersRef.on("value", (snapshot) => {
+      const raw = snapshot.val() || {};
+      const parsed = Object.entries(raw)
+        .map(([id, data]) => ({ id, ...data }))
+        .reverse();
+      renderOrders(parsed);
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
