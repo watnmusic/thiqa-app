@@ -4,19 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ثقة - نظام اللوجستيات</title>
-  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#dc2626" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
-  <header class="bg-gray-900 border-b border-red-600/40 px-4 py-3 flex items-center justify-between">
+  <header class="bg-gray-900 border-b border-red-600/40 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full bg-red-600 inline-block"></span>
       <h1 class="text-lg font-bold text-white">ثقة <span class="text-xs font-normal text-red-400">للوجستيات</span></h1>
     </div>
-    <button id="adminBtn" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg">
+    <button id="adminBtn" type="button" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg">
       دخول الإدارة
     </button>
   </header>
@@ -27,82 +26,9 @@
       <form id="orderForm" class="space-y-3">
         <input id="customerName" type="text" required placeholder="اسم العميل أو الجهة"
           class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
-        <input id="itemDesc" type="text" required placeholder="وصف الطلب (مثال: قطع غيار، معدات...)"
+        <input id="phoneNumber" type="tel" required placeholder="رقم الهاتف للتواصل"
+          class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
+        <input id="itemDesc" type="text" required placeholder="وصف الطلب أو الشحنة"
           class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
         <div class="grid grid-cols-2 gap-3">
-          <input id="pickup" type="text" required placeholder="نقطة الاستلام"
-            class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
-          <input id="dropoff" type="text" required placeholder="وجهة التسليم"
-            class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500" />
-        </div>
-        <button type="submit"
-          class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 rounded-xl transition">
-          إرسال الطلب
-        </button>
-      </form>
-    </section>
-
-    <section class="space-y-3">
-      <h2 class="font-bold text-base text-gray-200">الطلبات الحالية</h2>
-      <div id="ordersList" class="space-y-2.5">
-        <p class="text-sm text-gray-500">جاري تحميل الطلبات...</p>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBN4lQipdMRtcmqQzhUmyQCKKPoOGyPCyE",
-      authDomain: "thiqa-app-3dbca.firebaseapp.com",
-      databaseURL: "https://thiqa-app-3dbca-default-rtdb.firebaseio.com",
-      projectId: "thiqa-app-3dbca",
-      storageBucket: "thiqa-app-3dbca.firebasestorage.app",
-      messagingSenderId: "453691349979",
-      appId: "1:453691349979:web:b956f2a12c65bc4207a5fe",
-      measurementId: "G-N76DTL00X2"
-    };
-
-    const ADMIN_PIN = "1999";
-
-    let isAdmin = false;
-    let db = null;
-
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-    } catch (e) {
-      console.warn("Firebase غير مهيأ بعد:", e);
-    }
-
-    document.getElementById("adminBtn").addEventListener("click", () => {
-      if (isAdmin) {
-        isAdmin = false;
-        document.getElementById("adminBtn").textContent = "دخول الإدارة";
-        renderOrders(lastOrders);
-        return;
-      }
-      const pin = prompt("أدخل رمز الإدارة:");
-      if (pin === ADMIN_PIN) {
-        isAdmin = true;
-        document.getElementById("adminBtn").textContent = "خروج الإدارة (نشط)";
-        renderOrders(lastOrders);
-      } else if (pin !== null) {
-        alert("الرمز غير صحيح");
-      }
-    });
-
-    const orderForm = document.getElementById("orderForm");
-    orderForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const order = {
-        customerName: document.getElementById("customerName").value.trim(),
-        itemDesc: document.getElementById("itemDesc").value.trim(),
-        pickup: document.getElementById("pickup").value.trim(),
-        dropoff: document.getElementById("dropoff").value.trim(),
-        status: "قيد الانتظار",
-        createdAt: Date.now()
-      };
-
-      if (!db) {
-        alert("يرجى ضبط إعدادات firebaseConfig أولاً داخل ملف index.html");
-        return
+          <input id="pickup" type="text" required placeholder="نقطة
